@@ -95,7 +95,10 @@ public class ProviderIT {
      */
     @Test
     public void testPebble() throws AcmeException, MalformedURLException {
-        var session = new Session("acme://pebble");
+        var pebbleHost = System.getProperty("pebbleHost", "localhost");
+        var pebblePort = System.getProperty("pebblePort", "14000");
+
+        var session = new Session("acme://pebble/" + pebbleHost + ":" + pebblePort);
         assertThat(session.getMetadata().getWebsite()).isEmpty();
         assertThatNoException().isThrownBy(() -> session.resourceUrl(Resource.NEW_ACCOUNT));
         assertThat(session.getMetadata().isExternalAccountRequired()).isFalse();
