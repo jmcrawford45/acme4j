@@ -1,22 +1,42 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_HOST: tcp://docker:2376
+  DOCKER_TLS_VERIFY: "1"
+  DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+
+image: maven:3-eclipse-temurin-17
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - /root/.m2/repository/
+    - acme4j-client/target/
+    - acme4j-example/target/
+    - acme4j-it/target/
+    - acme4j-smime/target/
+    - target/
 
 build:
-  tags:
-    - maven
-    - docker
+  stage: build
   script:
     - mvn clean compile
 
 test:
-  tags:
-    - maven
-    - docker
+  stage: test
+  services:
+    - name: docker:28.5.2-dind
+      alias: pebble, bammbamm
   script:
     - (cd acme4j-it; mvn -B docker:remove)
-    - mvn -B -P ci verify
+    - mvn -B -P ci verify -DpebbleHost=pebble -DbammbammUrl=http://bammbamm:8055 -Ddocker.showLogs=true
 
 deploy:
-  tags:
-    - maven
-    - docker
+  stage: deploy
   script:
+    - apt-get update -y && apt-get install -y mkdocs
     - mvn -B install mkdocs:build javadoc:javadoc
