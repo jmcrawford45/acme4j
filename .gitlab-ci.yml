@@ -1,7 +1,6 @@
 stages:
   - build
   - test
-  - deploy
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
@@ -24,7 +23,8 @@ cache:
 build:
   stage: build
   script:
-    - mvn clean compile
+    - apt-get update -y && apt-get install -y mkdocs
+    - mvn -B clean install mkdocs:build javadoc:javadoc
 
 test:
   stage: test
@@ -34,9 +34,3 @@ test:
   script:
     - (cd acme4j-it; mvn -B docker:remove)
     - mvn -B -P ci verify -DpebbleHost=pebble -DbammbammUrl=http://bammbamm:8055 -Ddocker.showLogs=true
-
-deploy:
-  stage: deploy
-  script:
-    - apt-get update -y && apt-get install -y mkdocs
-    - mvn -B install mkdocs:build javadoc:javadoc
