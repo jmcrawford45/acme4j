@@ -29,7 +29,7 @@ build:
 test:
   stage: test
   services:
-    - name: docker:28.5.2-dind
+    - name: docker:dind
       alias: pebble, bammbamm
   script:
     - (cd acme4j-it; mvn -B docker:remove)
