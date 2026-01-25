@@ -24,7 +24,7 @@ build:
   stage: build
   script:
     - apt-get update -y && apt-get install -y mkdocs
-    - mvn -B clean install mkdocs:build javadoc:javadoc
+    - mvn -B clean install mkdocs:build
 
 test:
   stage: test
