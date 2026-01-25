@@ -117,8 +117,8 @@ public class DefaultConnection implements Connection {
     public void resetNonce(Session session) throws AcmeException {
         assertConnectionIsClosed();
 
-        try {
-            session.setNonce(null);
+        try (var nonceHolder = session.lockNonce()) {
+            nonceHolder.setNonce(null);
 
             var newNonceUrl = session.resourceUrl(Resource.NEW_NONCE);
 
@@ -134,7 +134,7 @@ public class DefaultConnection implements Connection {
                 throw new AcmeException("Server responded with HTTP " + rc + " while trying to retrieve a nonce");
             }
 
-            session.setNonce(getNonce()
+            nonceHolder.setNonce(getNonce()
                     .orElseThrow(() -> new AcmeProtocolException("Server did not provide a nonce"))
             );
         } catch (IOException ex) {
@@ -153,7 +153,7 @@ public class DefaultConnection implements Connection {
 
         LOG.debug("GET {}", url);
 
-        try {
+        try (var nonceHolder = session.lockNonce()) {
             sendRequest(session, url, builder -> {
                 builder.GET();
                 builder.header(ACCEPT_HEADER, MIME_JSON);
@@ -164,7 +164,7 @@ public class DefaultConnection implements Connection {
 
             logHeaders();
 
-            getNonce().ifPresent(session::setNonce);
+            getNonce().ifPresent(nonceHolder::setNonce);
 
             var rc = getResponse().statusCode();
             if (rc != HTTP_OK && rc != HTTP_CREATED && (rc != HTTP_NOT_MODIFIED || ifModifiedSince == null)) {
@@ -409,8 +409,8 @@ public class DefaultConnection implements Connection {
     private int performRequest(URL url, @Nullable JSONBuilder claims, Session session,
                                KeyPair keypair, @Nullable URL accountLocation, String accept)
             throws AcmeException {
-        try {
-            if (session.getNonce() == null) {
+        try (var nonceHolder = session.lockNonce()) {
+            if (nonceHolder.getNonce() == null) {
                 resetNonce(session);
             }
 
@@ -418,7 +418,7 @@ public class DefaultConnection implements Connection {
                     url,
                     keypair,
                     claims,
-                    session.getNonce(),
+                    nonceHolder.getNonce(),
                     accountLocation != null ? accountLocation.toString() : null
             );
 
@@ -432,7 +432,7 @@ public class DefaultConnection implements Connection {
 
             logHeaders();
 
-            session.setNonce(getNonce().orElse(null));
+            nonceHolder.setNonce(getNonce().orElse(null));
 
             var rc = getResponse().statusCode();
             if (rc != HTTP_OK && rc != HTTP_CREATED) {

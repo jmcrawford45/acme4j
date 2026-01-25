@@ -22,6 +22,7 @@ import static org.shredzone.acme4j.toolbox.TestUtils.getJSON;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -40,8 +41,7 @@ import org.shredzone.acme4j.connector.Connection;
 import org.shredzone.acme4j.connector.DefaultConnection;
 import org.shredzone.acme4j.connector.HttpConnector;
 import org.shredzone.acme4j.connector.NetworkSettings;
-
-import java.net.http.HttpClient;
+import org.shredzone.acme4j.connector.NonceHolder;
 import org.shredzone.acme4j.exception.AcmeException;
 import org.shredzone.acme4j.exception.AcmeProtocolException;
 import org.shredzone.acme4j.toolbox.JSONBuilder;
@@ -89,6 +89,7 @@ public class AbstractAcmeProviderTest {
         var session = mock(Session.class);
 
         when(connection.readJsonResponse()).thenReturn(getJSON("directory"));
+        when(session.lockNonce()).thenReturn(mock(NonceHolder.class));
 
         var provider = new TestAbstractAcmeProvider(connection);
         var map = provider.directory(session, SERVER_URI);
@@ -118,6 +119,7 @@ public class AbstractAcmeProviderTest {
         when(connection.readJsonResponse()).thenReturn(getJSON("directory"));
         when(connection.getLastModified()).thenReturn(Optional.of(lastModified));
         when(connection.getExpiration()).thenReturn(Optional.of(expiryDate));
+        when(session.lockNonce()).thenReturn(mock(NonceHolder.class));
         when(session.getDirectoryExpires()).thenReturn(null);
         when(session.getDirectoryLastModified()).thenReturn(null);
         when(session.networkSettings()).thenReturn(NETWORK_SETTINGS);
@@ -134,6 +136,7 @@ public class AbstractAcmeProviderTest {
         verify(session).getDirectoryLastModified();
         verify(session).networkSettings();
         verify(session).getHttpClient();
+        verify(session).lockNonce();
         verifyNoMoreInteractions(session);
 
         verify(connection).sendRequest(RESOLVED_URL, session, null);
@@ -185,6 +188,7 @@ public class AbstractAcmeProviderTest {
         when(session.getDirectoryExpires()).thenReturn(pastExpiryDate);
         when(session.networkSettings()).thenReturn(NETWORK_SETTINGS);
         when(session.getHttpClient()).thenReturn(HttpClient.newBuilder().build());
+        when(session.lockNonce()).thenReturn(mock(NonceHolder.class));
 
         var provider = new TestAbstractAcmeProvider(connection);
         var map = provider.directory(session, SERVER_URI);
@@ -197,6 +201,7 @@ public class AbstractAcmeProviderTest {
         verify(session).getDirectoryLastModified();
         verify(session).networkSettings();
         verify(session).getHttpClient();
+        verify(session).lockNonce();
         verifyNoMoreInteractions(session);
 
         verify(connection).sendRequest(RESOLVED_URL, session, null);
@@ -224,6 +229,7 @@ public class AbstractAcmeProviderTest {
         when(session.getDirectoryLastModified()).thenReturn(modifiedSinceDate);
         when(session.networkSettings()).thenReturn(NETWORK_SETTINGS);
         when(session.getHttpClient()).thenReturn(HttpClient.newBuilder().build());
+        when(session.lockNonce()).thenReturn(mock(NonceHolder.class));
 
         var provider = new TestAbstractAcmeProvider(connection);
         var map = provider.directory(session, SERVER_URI);
@@ -234,6 +240,7 @@ public class AbstractAcmeProviderTest {
         verify(session).getDirectoryLastModified();
         verify(session).networkSettings();
         verify(session).getHttpClient();
+        verify(session).lockNonce();
         verifyNoMoreInteractions(session);
 
         verify(connection).sendRequest(RESOLVED_URL, session, modifiedSinceDate);

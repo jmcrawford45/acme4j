@@ -26,12 +26,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.StreamSupport;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.shredzone.acme4j.connector.Connection;
 import org.shredzone.acme4j.connector.NetworkSettings;
+import org.shredzone.acme4j.connector.NonceHolder;
 import org.shredzone.acme4j.connector.Resource;
 import org.shredzone.acme4j.exception.AcmeException;
 import org.shredzone.acme4j.exception.AcmeNotSupportedException;
@@ -48,6 +50,10 @@ import org.shredzone.acme4j.toolbox.JSON.Value;
  * server to connect to. This can be the location of the CA's directory (via {@code http}
  * or {@code https} protocol), or a special URI (via {@code acme} protocol). See the
  * documentation about valid URIs.
+ * <p>
+ * Starting with version 4.0.0, a session instance can be shared between multiple threads.
+ * A session won't perform parallel HTTP connections. For high-load scenarios, it is
+ * recommended to use multiple sessions.
  */
 public class Session {
 
@@ -56,6 +62,7 @@ public class Session {
     private final AtomicReference<Map<Resource, URL>> resourceMap = new AtomicReference<>();
     private final AtomicReference<Metadata> metadata = new AtomicReference<>();
     private final AtomicReference<HttpClient> httpClient = new AtomicReference<>();
+    private final ReentrantLock nonceLock = new ReentrantLock();
     private final NetworkSettings networkSettings = new NetworkSettings();
     private final URI serverUri;
     private final AcmeProvider provider;
@@ -151,20 +158,31 @@ public class Session {
     }
 
     /**
-     * Gets the last base64 encoded nonce, or {@code null} if the session is new. This
-     * method is mainly for internal use.
+     * Locks the Session for the current thread, and returns a {@link NonceHolder}.
+     * <p>
+     * The current thread can lock the nonce multiple times. Other threads have to wait
+     * until the current thread unlocks the nonce.
+     *
+     * @since 4.0.0
      */
-    @Nullable
-    public String getNonce() {
-        return nonce;
-    }
+    public NonceHolder lockNonce() {
+        nonceLock.lock();
+        return new NonceHolder() {
+            @Override
+            public String getNonce() {
+                return Session.this.nonce;
+            }
 
-    /**
-     * Sets the base64 encoded nonce received by the server. This method is mainly for
-     * internal use.
-     */
-    public void setNonce(@Nullable String nonce) {
-        this.nonce = nonce;
+            @Override
+            public void setNonce(@Nullable String nonce) {
+                Session.this.nonce = nonce;
+            }
+
+            @Override
+            public void close() {
+                nonceLock.unlock();
+            }
+        };
     }
 
     /**

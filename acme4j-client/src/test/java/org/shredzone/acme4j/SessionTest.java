@@ -80,9 +80,11 @@ public class SessionTest {
 
         var session = new Session(serverUri);
 
-        assertThat(session.getNonce()).isNull();
-        session.setNonce(DUMMY_NONCE);
-        assertThat(session.getNonce()).isEqualTo(DUMMY_NONCE);
+        try (var nonceHolder = session.lockNonce()) {
+            assertThat(nonceHolder.getNonce()).isNull();
+            nonceHolder.setNonce(DUMMY_NONCE);
+            assertThat(nonceHolder.getNonce()).isEqualTo(DUMMY_NONCE);
+        }
 
         assertThat(session.getServerUri()).isEqualTo(serverUri);
         assertThat(session.networkSettings()).isNotNull();

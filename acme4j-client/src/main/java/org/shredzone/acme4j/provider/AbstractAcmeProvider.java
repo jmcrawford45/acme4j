@@ -62,7 +62,8 @@ public abstract class AbstractAcmeProvider implements AcmeProvider {
             return null;
         }
 
-        try (var conn = connect(serverUri, session.networkSettings(), session.getHttpClient())) {
+        try (var nonceHolder = session.lockNonce();
+             var conn = connect(serverUri, session.networkSettings(), session.getHttpClient())) {
             var lastModified = session.getDirectoryLastModified();
             var rc = conn.sendRequest(resolve(serverUri), session, lastModified);
             if (lastModified != null && rc == HTTP_NOT_MODIFIED) {
@@ -75,7 +76,7 @@ public abstract class AbstractAcmeProvider implements AcmeProvider {
             session.setDirectoryExpires(conn.getExpiration().orElse(null));
 
             // use nonce header if there is one, saves a HEAD request...
-            conn.getNonce().ifPresent(session::setNonce);
+            conn.getNonce().ifPresent(nonceHolder::setNonce);
 
             return conn.readJsonResponse();
         }

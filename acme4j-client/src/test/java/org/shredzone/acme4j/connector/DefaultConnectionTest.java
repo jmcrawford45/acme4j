@@ -113,9 +113,8 @@ public class DefaultConnectionTest {
     public void testNoNonceFromHeader() throws AcmeException {
         stubFor(head(urlEqualTo(NEW_NONCE_PATH)).willReturn(ok()));
 
-        assertThat(session.getNonce()).isNull();
-
-        try (var conn = session.connect()) {
+        try (var nonceHolder = session.lockNonce(); var conn = session.connect()) {
+            assertThat(nonceHolder.getNonce()).isNull();
             conn.sendRequest(directoryUrl, session, null);
             assertThat(conn.getNonce()).isEmpty();
         }
@@ -131,12 +130,11 @@ public class DefaultConnectionTest {
                 .withHeader("Replay-Nonce", TestUtils.DUMMY_NONCE)
         ));
 
-        assertThat(session.getNonce()).isNull();
-
-        try (var conn = session.connect()) {
+        try (var nonceHolder = session.lockNonce(); var conn = session.connect()) {
+            assertThat(nonceHolder.getNonce()).isNull();
             conn.sendRequest(requestUrl, session, null);
             assertThat(conn.getNonce().orElseThrow()).isEqualTo(TestUtils.DUMMY_NONCE);
-            assertThat(session.getNonce()).isEqualTo(TestUtils.DUMMY_NONCE);
+            assertThat(nonceHolder.getNonce()).isEqualTo(TestUtils.DUMMY_NONCE);
         }
 
         verify(getRequestedFor(urlEqualTo(REQUEST_PATH)));
@@ -155,13 +153,15 @@ public class DefaultConnectionTest {
                 // do not send a body here because it is a HEAD request!
         ));
 
-        assertThat(session.getNonce()).isNull();
+        try (var nonceHolder = session.lockNonce()) {
+            assertThat(nonceHolder.getNonce()).isNull();
 
-        assertThatExceptionOfType(AcmeException.class).isThrownBy(() -> {
-            try (var conn = session.connect()) {
-                conn.resetNonce(session);
-            }
-        });
+            assertThatExceptionOfType(AcmeException.class).isThrownBy(() -> {
+                try (var conn = session.connect()) {
+                    conn.resetNonce(session);
+                }
+            });
+        }
 
         verify(headRequestedFor(urlEqualTo(NEW_NONCE_PATH)));
     }
@@ -177,14 +177,16 @@ public class DefaultConnectionTest {
                 // do not send a body here because it is a HEAD request!
         ));
 
-        assertThat(session.getNonce()).isNull();
+        try (var nonceHolder = session.lockNonce()) {
+            assertThat(nonceHolder.getNonce()).isNull();
 
-        var ex = assertThrows(AcmeException.class, () -> {
-            try (var conn = session.connect()) {
-                conn.resetNonce(session);
-            }
-        });
-        assertThat(ex.getMessage()).isEqualTo("Server responded with HTTP 500 while trying to retrieve a nonce");
+            var ex = assertThrows(AcmeException.class, () -> {
+                try (var conn = session.connect()) {
+                    conn.resetNonce(session);
+                }
+            });
+            assertThat(ex.getMessage()).isEqualTo("Server responded with HTTP 500 while trying to retrieve a nonce");
+        }
 
         verify(headRequestedFor(urlEqualTo(NEW_NONCE_PATH)));
     }
@@ -222,13 +224,13 @@ public class DefaultConnectionTest {
                 .withHeader("Replay-Nonce", TestUtils.DUMMY_NONCE)
         ));
 
-        assertThat(session.getNonce()).isNull();
+        try (var nonceHolder = session.lockNonce(); var conn = session.connect()) {
+            assertThat(nonceHolder.getNonce()).isNull();
 
-        try (var conn = session.connect()) {
             conn.resetNonce(session);
-        }
 
-        assertThat(session.getNonce()).isEqualTo(TestUtils.DUMMY_NONCE);
+            assertThat(nonceHolder.getNonce()).isEqualTo(TestUtils.DUMMY_NONCE);
+        }
     }
 
     /**
@@ -239,15 +241,17 @@ public class DefaultConnectionTest {
     public void testResetNonceThrowsException() {
         stubFor(head(urlEqualTo(NEW_NONCE_PATH)).willReturn(ok()));
 
-        assertThat(session.getNonce()).isNull();
+        try (var nonceHolder = session.lockNonce()) {
+            assertThat(nonceHolder.getNonce()).isNull();
 
-        assertThrows(AcmeProtocolException.class, () -> {
-            try (var conn = session.connect()) {
-                conn.resetNonce(session);
-            }
-        });
+            assertThrows(AcmeProtocolException.class, () -> {
+                try (var conn = session.connect()) {
+                    conn.resetNonce(session);
+                }
+            });
 
-        assertThat(session.getNonce()).isNull();
+            assertThat(nonceHolder.getNonce()).isNull();
+        }
     }
 
     /**
@@ -415,7 +419,9 @@ public class DefaultConnectionTest {
                 .withBody("")
         ));
 
-        session.setNonce(TestUtils.DUMMY_NONCE);
+        try (var nonceHolder = session.lockNonce()) {
+            nonceHolder.setNonce(TestUtils.DUMMY_NONCE);
+        }
 
         try (var conn = session.connect()) {
             var rc = conn.sendSignedRequest(requestUrl, new JSONBuilder(), login);
@@ -440,7 +446,9 @@ public class DefaultConnectionTest {
                 .withBody(problem.toString())
         ));
 
-        session.setNonce(TestUtils.DUMMY_NONCE);
+        try (var nonceHolder = session.lockNonce()) {
+            nonceHolder.setNonce(TestUtils.DUMMY_NONCE);
+        }
 
         var ex = assertThrows(AcmeException.class, () -> {
             try (var conn = session.connect()) {
@@ -470,7 +478,9 @@ public class DefaultConnectionTest {
                 .withBody(problem.toString())
         ));
 
-        session.setNonce(TestUtils.DUMMY_NONCE);
+        try (var nonceHolder = session.lockNonce()) {
+            nonceHolder.setNonce(TestUtils.DUMMY_NONCE);
+        }
 
         var ex = assertThrows(AcmeException.class, () -> {
             try (var conn = session.connect()) {
@@ -505,7 +515,9 @@ public class DefaultConnectionTest {
                 .withBody(problem.toString())
         ));
 
-        session.setNonce(TestUtils.DUMMY_NONCE);
+        try (var nonceHolder = session.lockNonce()) {
+            nonceHolder.setNonce(TestUtils.DUMMY_NONCE);
+        }
 
         var ex = assertThrows(AcmeRateLimitedException.class, () -> {
             try (var conn = session.connect()) {
@@ -536,7 +548,9 @@ public class DefaultConnectionTest {
                 .withBody(problem.toString())
         ));
 
-        session.setNonce(TestUtils.DUMMY_NONCE);
+        try (var nonceHolder = session.lockNonce()) {
+            nonceHolder.setNonce(TestUtils.DUMMY_NONCE);
+        }
 
         var ex = assertThrows(AcmeServerException.class, () -> {
             try (var conn = session.connect()) {
@@ -559,7 +573,9 @@ public class DefaultConnectionTest {
                 .withBody("{}")
         ));
 
-        session.setNonce(TestUtils.DUMMY_NONCE);
+        try (var nonceHolder = session.lockNonce()) {
+            nonceHolder.setNonce(TestUtils.DUMMY_NONCE);
+        }
 
         var ex = assertThrows(AcmeProtocolException.class, () -> {
             try (var conn = session.connect()) {
@@ -581,7 +597,9 @@ public class DefaultConnectionTest {
                 .withBody("<html><head><title>Infernal Server Error</title></head></html>")
         ));
 
-        session.setNonce(TestUtils.DUMMY_NONCE);
+        try (var nonceHolder = session.lockNonce()) {
+            nonceHolder.setNonce(TestUtils.DUMMY_NONCE);
+        }
 
         var ex = assertThrows(AcmeException.class, () -> {
             try (var conn = session.connect()) {
@@ -656,7 +674,9 @@ public class DefaultConnectionTest {
             conn.sendSignedRequest(requestUrl, cb, login);
         }
 
-        assertThat(session.getNonce()).isEqualTo(nonce2);
+        try (var nonceHolder = session.lockNonce()) {
+            assertThat(nonceHolder.getNonce()).isEqualTo(nonce2);
+        }
 
         verify(postRequestedFor(urlEqualTo(REQUEST_PATH))
                 .withHeader("Accept", equalTo("application/json"))
@@ -709,7 +729,9 @@ public class DefaultConnectionTest {
             conn.sendSignedPostAsGetRequest(requestUrl, login);
         }
 
-        assertThat(session.getNonce()).isEqualTo(nonce2);
+        try (var nonceHolder = session.lockNonce()) {
+            assertThat(nonceHolder.getNonce()).isEqualTo(nonce2);
+        }
 
         verify(postRequestedFor(urlEqualTo(REQUEST_PATH))
                 .withHeader("Accept", equalTo("application/json"))
@@ -763,7 +785,9 @@ public class DefaultConnectionTest {
             conn.sendCertificateRequest(requestUrl, login);
         }
 
-        assertThat(session.getNonce()).isEqualTo(nonce2);
+        try (var nonceHolder = session.lockNonce()) {
+            assertThat(nonceHolder.getNonce()).isEqualTo(nonce2);
+        }
 
         verify(postRequestedFor(urlEqualTo(REQUEST_PATH))
                 .withHeader("Accept", equalTo("application/pem-certificate-chain"))
@@ -794,7 +818,9 @@ public class DefaultConnectionTest {
             conn.sendSignedRequest(requestUrl, cb, session, keyPair);
         }
 
-        assertThat(session.getNonce()).isEqualTo(nonce2);
+        try (var nonceHolder = session.lockNonce()) {
+            assertThat(nonceHolder.getNonce()).isEqualTo(nonce2);
+        }
 
         verify(postRequestedFor(urlEqualTo(REQUEST_PATH))
                 .withHeader("Accept", equalTo("application/json"))
