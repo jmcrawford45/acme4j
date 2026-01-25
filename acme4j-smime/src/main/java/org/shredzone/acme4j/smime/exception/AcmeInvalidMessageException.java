@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.bouncycastle.i18n.ErrorBundle;
 import org.bouncycastle.i18n.LocalizedException;
 import org.shredzone.acme4j.exception.AcmeException;
@@ -96,7 +95,6 @@ public class AcmeInvalidMessageException extends AcmeException {
      *
      * @since 2.16
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")   // errors is always an unmodifiable list
     public List<ErrorBundle> getErrors() {
         return errors;
     }

@@ -51,12 +51,12 @@
     </developers>
 
     <properties>
-        <bouncycastle.version>1.80</bouncycastle.version>
+        <bouncycastle.version>1.83</bouncycastle.version>
         <httpclient.version>4.5.14</httpclient.version>
-        <jakarta.mail.version>2.0.1</jakarta.mail.version>
+        <jakarta.mail.version>2.0.5</jakarta.mail.version>
         <jose4j.version>0.9.6</jose4j.version>
-        <junit.version>5.11.4</junit.version>
-        <slf4j.version>2.0.16</slf4j.version>
+        <junit.version>5.14.2</junit.version>
+        <slf4j.version>2.0.17</slf4j.version>
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>utf-8</project.reporting.outputEncoding>
     </properties>
@@ -73,7 +73,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.14.1</version>
                 <configuration>
                     <release>17</release>
                 </configuration>
@@ -81,7 +81,7 @@
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.8.6.3</version>
+                <version>4.9.8.2</version>
                 <executions>
                     <execution>
                         <goals>
@@ -93,7 +93,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
+                <version>3.5.4</version>
                 <configuration combine.children="append">
                     <parallel>classes</parallel>
                     <threadCount>10</threadCount>
@@ -103,7 +103,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>3.5.4</version>
                 <executions>
                     <execution>
                         <goals>
@@ -116,7 +116,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.5.0</version>
                 <configuration>
                     <excludes>
                         <exclude>**/.gitignore</exclude>
@@ -126,7 +126,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
+                <version>3.3.1</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
@@ -137,7 +137,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>3.4.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -150,7 +150,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.12.0</version>
                 <configuration>
                     <doclint>syntax,reference</doclint>
                     <linksource>true</linksource>
@@ -178,7 +178,7 @@
         <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
-            <version>4.9.0</version>
+            <version>4.9.8</version>
             <optional>true</optional>
             <exclusions>
                 <exclusion>
@@ -189,45 +189,26 @@
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
+            <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.27.3</version>
+            <version>3.27.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
             <artifactId>json-unit-assertj</artifactId>
-            <version>4.1.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <!-- Required by json-unit-assertj -->
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20250107</version>
+            <version>5.1.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.15.2</version>
+            <version>5.21.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

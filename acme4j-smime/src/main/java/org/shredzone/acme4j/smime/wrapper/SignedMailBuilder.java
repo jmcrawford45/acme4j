@@ -59,7 +59,7 @@ public class SignedMailBuilder {
     private static final AtomicReference<KeyStore> CACERTS_TRUSTSTORE = new AtomicReference<>();
 
     private Session mailSession = Session.getDefaultInstance(new Properties());
-    private boolean relaxed = false;
+    private volatile boolean relaxed = false;
 
     @Nullable
     private PKIXParameters pkixParameters = null;
