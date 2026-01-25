@@ -55,11 +55,11 @@ public class Session {
 
     private final AtomicReference<Map<Resource, URL>> resourceMap = new AtomicReference<>();
     private final AtomicReference<Metadata> metadata = new AtomicReference<>();
+    private final AtomicReference<HttpClient> httpClient = new AtomicReference<>();
     private final NetworkSettings networkSettings = new NetworkSettings();
     private final URI serverUri;
     private final AcmeProvider provider;
 
-    private volatile HttpClient httpClient;
     private @Nullable String nonce;
     private @Nullable Locale locale = Locale.getDefault();
     private String languageHeader = AcmeUtils.localeToLanguageHeader(Locale.getDefault());
@@ -235,11 +235,16 @@ public class Session {
      * @return Shared {@link HttpClient} instance
      * @since 4.0.0
      */
-    public synchronized HttpClient getHttpClient() {
-        if (httpClient == null) {
-            httpClient = provider.createHttpClient(networkSettings);
+    public HttpClient getHttpClient() {
+        var result = httpClient.get();
+        if (result == null) {
+            result = httpClient.updateAndGet(
+                    client -> client != null
+                            ? client
+                            : provider.createHttpClient(networkSettings)
+            );
         }
-        return httpClient;
+        return result;
     }
 
     /**
