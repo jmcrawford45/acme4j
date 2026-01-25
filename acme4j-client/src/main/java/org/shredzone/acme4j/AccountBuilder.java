@@ -282,8 +282,7 @@ public class AccountBuilder {
             if (keyIdentifier != null && macKey != null) {
                 var algorithm = Optional.ofNullable(macAlgorithm)
                         .or(session.provider()::getProposedEabMacAlgorithm)
-// FIXME: Cannot use a Supplier here due to a Spotbugs false positive "null pointer dereference"
-                        .orElse(macKeyAlgorithm(macKey));
+                        .orElseGet(() -> macKeyAlgorithm(macKey));
                 claims.put("externalAccountBinding", JoseUtils.createExternalAccountBinding(
                         keyIdentifier, keyPair.getPublic(), macKey, algorithm, resourceUrl));
             }

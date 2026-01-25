@@ -14,7 +14,9 @@
 package org.shredzone.acme4j.it.pebble;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.net.URI;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
@@ -37,6 +39,7 @@ import org.shredzone.acme4j.challenge.Dns01Challenge;
 import org.shredzone.acme4j.challenge.DnsAccount01Challenge;
 import org.shredzone.acme4j.challenge.Http01Challenge;
 import org.shredzone.acme4j.challenge.TlsAlpn01Challenge;
+import org.shredzone.acme4j.exception.AcmeServerException;
 
 /**
  * Tests a complete certificate order with different challenges.
@@ -240,12 +243,10 @@ public class OrderIT extends PebbleITBase {
 
         revoker.revoke(session, certificate, keyPair, domainKeyPair);
 
-        /* FIXME: Waiting for https://github.com/letsencrypt/pebble/pull/505 to be deployed
         var ex2 = assertThrows(AcmeServerException.class,
                 certificate::revoke,
                 "Could revoke again");
         assertThat(ex2.getProblem().getType()).isEqualTo(URI.create("urn:ietf:params:acme:error:alreadyRevoked"));
-        */
     }
 
     /**
