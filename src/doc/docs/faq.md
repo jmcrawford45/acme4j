@@ -10,6 +10,16 @@ All you can do is to contact the CA support hotline and ask for support.
 
 You can still revoke certificates without account key pair though, see [here](usage/revocation.md#without-account-key).
 
+## I suddenly get "Network error" when connecting to Pebble.
+
+**Symptom:** When connecting to Pebble, `org.shredzone.acme4j.exception.AcmeNetworkException: Network error` exceptions are thrown, with `PKIX path building failed` mentioned as cause. The code has worked before.
+
+**Cause:** Starting with v2.9.0, Pebble uses a new self-signed certificate for its API connection. It doesn't match the certificate stored in _acme4j_ before v4.0.0.
+
+**Solution:** Update to _acme4j_ v4.0.0 or higher.
+
+If you cannot update _acme4j_, download Pebble's certificate from [here](https://raw.githubusercontent.com/letsencrypt/pebble/refs/heads/main/test/certs/pebble.minica.key.pem). Store the file either as resource (e.g. `src/main/resources` or `src/test/resources`, respectively), or as `META-INF`. It will [override the stored certificate](ca/pebble.md#custom-ca-certificate). (This workaround only affects the Pebble provider, and is safe for production use.)
+
 ## My `Challenge` is in status `PENDING`. What does it mean?
 
 **Symptom:** After the challenge was triggered, it changes to status `PENDING`.
@@ -17,7 +27,6 @@ You can still revoke certificates without account key pair though, see [here](us
 **Cause:** You have triggered the challenge, and are now waiting for the CA to verify it.
 
 **Solution:** Wait until the challenge changes to either `VALID` or `INVALID` state. Do not remove challenge related resources (e.g. HTML files or DNS records) before.
-
 
 ## My `Challenge` returns status `INVALID`. What has gone wrong?
 
