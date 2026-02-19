@@ -122,7 +122,7 @@ public class OrderIT extends PebbleITBase {
     @ValueSource(strings = {"default", "shortlived"})
     public void testDnsPersistValidation(String profile) throws Exception {
         orderCertificate(TEST_DOMAIN, auth -> {
-            BammBammClient client = getBammBammClient();
+            var client = getBammBammClient();
 
             DnsPersist01Challenge challenge = auth.findChallenge(DnsPersist01Challenge.class).orElseThrow();
 
