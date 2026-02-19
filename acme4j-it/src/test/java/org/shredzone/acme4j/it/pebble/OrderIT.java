@@ -37,6 +37,7 @@ import org.shredzone.acme4j.Status;
 import org.shredzone.acme4j.challenge.Challenge;
 import org.shredzone.acme4j.challenge.Dns01Challenge;
 import org.shredzone.acme4j.challenge.DnsAccount01Challenge;
+import org.shredzone.acme4j.challenge.DnsPersist01Challenge;
 import org.shredzone.acme4j.challenge.Http01Challenge;
 import org.shredzone.acme4j.challenge.TlsAlpn01Challenge;
 import org.shredzone.acme4j.exception.AcmeServerException;
@@ -97,7 +98,6 @@ public class OrderIT extends PebbleITBase {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {"default", "shortlived"})
-    @Disabled("Waiting for https://github.com/letsencrypt/pebble/pull/489")
     public void testDnsAccountValidation(String profile) throws Exception {
         orderCertificate(TEST_DOMAIN, auth -> {
             var client = getBammBammClient();
@@ -107,6 +107,34 @@ public class OrderIT extends PebbleITBase {
             var challengeDomainName = challenge.getRRName(auth.getIdentifier());
 
             client.dnsAddTxtRecord(challengeDomainName, challenge.getDigest());
+
+            cleanup(() -> client.dnsRemoveTxtRecord(challengeDomainName));
+
+            return challenge;
+        }, OrderIT::standardRevoker, profile);
+    }
+
+    /**
+     * Test if a certificate can be ordered via dns-persist-01 challenge.
+     */
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"default", "shortlived"})
+    public void testDnsPersistValidation(String profile) throws Exception {
+        orderCertificate(TEST_DOMAIN, auth -> {
+            BammBammClient client = getBammBammClient();
+
+            DnsPersist01Challenge challenge = auth.findChallenge(DnsPersist01Challenge.class).orElseThrow();
+
+            String challengeDomainName = challenge.getRRName(auth.getIdentifier());
+
+            // Get the first issuer domain name from the CA
+            String issuerDomainName = challenge.getIssuerDomainNames().get(0);
+
+            // Build the TXT record value according to RFC
+            String recordValue = challenge.buildRecordValue(issuerDomainName);
+
+            client.dnsAddTxtRecord(challengeDomainName, recordValue);
 
             cleanup(() -> client.dnsRemoveTxtRecord(challengeDomainName));
 

@@ -1,0 +1,9 @@
+{
+  "type": "dns-persist-01",
+  "url": "https://example.com/acme/chall/dns-persist-01",
+  "status": "pending",
+  "issuer-domain-names": [
+    "ca.example.com",
+    "authority.example.org"
+  ]
+}
