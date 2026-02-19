@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import org.shredzone.acme4j.Identifier;
 import org.shredzone.acme4j.Login;
 import org.shredzone.acme4j.toolbox.JSON;
@@ -145,7 +146,7 @@ public class DnsPersist01Challenge extends Challenge {
      *         new validations. Pass {@code null} to omit.
      * @return TXT record value
      */
-    public String buildRecordValue(String issuerDomainName, String policy, Long persistUntil) {
+    public String buildRecordValue(String issuerDomainName, @Nullable String policy, @Nullable Long persistUntil) {
         String normalized = normalizeIssuerDomainName(issuerDomainName);
         StringBuilder sb = new StringBuilder();
         sb.append(normalized);
