@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.shredzone.acme4j.Session;
 import org.shredzone.acme4j.connector.Resource;
 import org.shredzone.acme4j.exception.AcmeException;
+import org.shredzone.acme4j.toolbox.JSON;
 
 /**
  * Session related integration tests.
@@ -47,21 +48,26 @@ public class SessionIT extends PebbleITBase {
         assertThat(meta.getTermsOfService().orElseThrow())
                 .isEqualTo(URI.create("data:text/plain,Do%20what%20thou%20wilt"));
         assertThat(meta.getWebsite()).isEmpty();
-        assertThat(meta.getCaaIdentities()).containsExactly("pebble.letsencrypt.org");
+        assertThat(meta.getCaaIdentities()).contains("pebble.letsencrypt.org");
         assertThat(meta.isExternalAccountRequired()).isFalse();
         assertThat(meta.getProfiles()).contains("default", "shortlived");
         assertThat(meta.getProfileDescription("default")).contains("The profile you know and love");
         assertThat(meta.getProfileDescription("shortlived")).contains("A short-lived cert profile, without actual enforcement");
         assertThat(meta.getProfileDescription("paid")).isEmpty();
-        assertThatJson(meta.getJSON().toString()).isEqualTo("{"
-                        + "'caaIdentities': ['pebble.letsencrypt.org'],"
-                        + "'externalAccountRequired': false,"
-                        + "'profiles': {"
-                            + "'default': 'The profile you know and love',"
-                            + "'shortlived': 'A short-lived cert profile, without actual enforcement'"
-                        + "},"
-                        + "'termsOfService': 'data:text/plain,Do%20what%20thou%20wilt'"
-                        + "}");
+
+        assertThatJson(meta.getJSON().toString()).isEqualTo(JSON.parse("""
+                        {
+                            "caaIdentities": [
+                                "pebble.letsencrypt.org"
+                            ],
+                            "externalAccountRequired": false,
+                            "profiles": {
+                                "default": "The profile you know and love",
+                                "shortlived": "A short-lived cert profile, without actual enforcement"
+                            },
+                            "termsOfService": "data:text/plain,Do%20what%20thou%20wilt"
+                        }
+                        """).toString());
     }
 
 }
