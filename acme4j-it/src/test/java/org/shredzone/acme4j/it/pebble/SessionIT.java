@@ -54,7 +54,6 @@ public class SessionIT extends PebbleITBase {
         assertThat(meta.getProfileDescription("default")).contains("The profile you know and love");
         assertThat(meta.getProfileDescription("shortlived")).contains("A short-lived cert profile, without actual enforcement");
         assertThat(meta.getProfileDescription("paid")).isEmpty();
-
         assertThatJson(meta.getJSON().toString()).isEqualTo(JSON.parse("""
                         {
                             "caaIdentities": [
